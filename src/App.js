@@ -11,12 +11,14 @@ import 'react-tabs/style/react-tabs.css';
 import WeatherAPI from './Data/WeatherAPI';
 import GpsAPI from './Data/GpsAPI';
 import Loader from './Components/Loader';
+import { Map, TileLayer, Marker, Popup } from 'react-leaflet'
 
 class App extends Component{
   constructor(props){
     super(props)
     this.state={city:'', dates:[], isLoading:false,
-      err:''
+      err:'',lat:'36.7525',lon:'3.042',zoom:11.5,
+      popupInfo:{img:'',date:'',temp:''}
     }
   }
   componentDidMount=()=>{}
@@ -30,7 +32,12 @@ class App extends Component{
     .then((data)=>{
       data=data.data
       var dates=data.list
-      this.setState({dates, isLoading:false, city:data.city.name})
+      this.setState({dates, isLoading:false, city:data.city.name,lat:data.city.coord.lat,lon:data.city.coord.lon})
+      if(dates.length>0){
+        var popupInfo={img : dates[0].weather[0].icon,
+          date : new Date(dates[0].dt_txt).toLocaleDateString(),temp : dates[0].main.temp+' C°'}
+        this.setState({popupInfo})
+      }
       // $('#cityTitle').html(data.city.name)
       // initMap(data.city.coord.lat,data.city.coord.lon)
     })
@@ -70,22 +77,11 @@ class App extends Component{
             temp={date.main.temp}></Card>
         )
       }
-      if(i===0){
-          var popupInfo=`
-          <img src="http://openweathermap.org/img/wn/$img@2x.png">
-          <div style="display: flex;flex-direction: row;width: 100%;align-content: space-around;">
-              <div style="flex: 1;">$date / $temp</div>
-          </div>
-          `
-          popupInfo=popupInfo.replace('$img',date.weather[0].icon)
-          popupInfo=popupInfo.replace('$color',diffInHours<24 ? '#555' : '')
-          popupInfo=popupInfo.replace('$date',new Date(date.dt_txt).toLocaleDateString())
-          popupInfo=popupInfo.replace('$temp',date.main.temp+' C°')
-      }
     }
     return cards
   }
   render(){
+    const position = [this.state.lat, this.state.lon]
     return (
       <>
       <input type="text" id="city" name="city" value={this.state.city} onChange={this.onChange} placeholder="Enter your city here..." />
@@ -109,7 +105,20 @@ class App extends Component{
           </div>
         </TabPanel>
         <TabPanel>
-          <h2>Any content 2</h2>
+          <Map center={position} zoom={this.state.zoom} style={{height:'60vh'}}>
+            <TileLayer
+              attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <Marker position={position}>
+              <Popup>
+                <img alt="weatherImg" src={"http://openweathermap.org/img/wn/"+this.state.popupInfo.img+"@2x.png"}/>
+                <div style={{display: 'flex', flexDirection: 'row', width: '100%', alignContent: 'space-around'}}>
+                    <div style={{flex: 1}}>{this.state.popupInfo.date+' / '+this.state.popupInfo.temp}</div>
+                </div>
+              </Popup>
+            </Marker>
+          </Map>
         </TabPanel>
       </Tabs>
       </>
