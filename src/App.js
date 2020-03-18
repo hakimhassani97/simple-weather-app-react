@@ -59,6 +59,9 @@ class App extends Component{
       this.getWeather('&lat='+position.coords.latitude+'&lon='+position.coords.longitude)
     })
   }
+  mapClick=(e)=>{
+    this.getWeather('&lat='+e.latlng.lat+'&lon='+e.latlng.lng)
+  }
   DaysCardsComponent=()=>{
     var dates=this.state.dates
     var cards=[]
@@ -96,7 +99,12 @@ class App extends Component{
         <div style={errorStyle}>
           {this.state.err}
         </div>}
-        {this.state.isLoading && <Loader></Loader>}
+        {this.state.isLoading &&
+        <div style={loadingStyle}>
+          <div style={{margin:'0 auto'}}>
+            <Loader></Loader>
+          </div>
+        </div>}
         <TabPanel>
           <div id="infoTab" className="tabcontent">
             <div id="list" className="basic-grid">
@@ -105,7 +113,7 @@ class App extends Component{
           </div>
         </TabPanel>
         <TabPanel>
-          <Map center={position} zoom={this.state.zoom} style={{height:'60vh'}}>
+          <Map center={position} zoom={this.state.zoom} style={{height:'60vh'}} onclick={this.mapClick}>
             <TileLayer
               attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -127,4 +135,5 @@ class App extends Component{
 }
 var errorStyle={width:'90%', backgroundColor:'#ffafaf', color:'red', border:'2px solid red', borderRadius:'6px', margin:'0 auto', padding:'10px'}
 var tabStyle={color:'black', height:'6vh'}
+var loadingStyle={height:'100vh',width:'100%',position:"absolute",top:0,left:0,display:'flex',flexDirection:'row',alignItems:'center', backgroundColor:'rgba(0,0,0,0.5)', zIndex:1000}
 export default App;
